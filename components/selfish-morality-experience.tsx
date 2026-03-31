@@ -1092,9 +1092,9 @@ export function SelfishMoralityExperience() {
           href="https://b-average.com"
           target="_blank"
           rel="noreferrer"
-          className="text-[12px] font-medium text-[#4a4a4a] underline decoration-black/20 underline-offset-2 transition hover:text-[#2f2f2f] hover:decoration-black/40 sm:text-[13px]"
+          className="rounded-none bg-white pl-1.5 pr-[5px] py-1 text-[11px] font-semibold uppercase tracking-[2.16px] text-black no-underline transition hover:bg-black hover:text-white"
         >
-          B Average
+          B AVERAGE
         </a>
       </div>
 

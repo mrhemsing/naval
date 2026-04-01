@@ -10,7 +10,7 @@ const BASE_TEXT_REVEAL_MS = 1500;
 const EXTRA_TEXT_REVEAL_MS_PER_PARAGRAPH = 220;
 const BASE_POST_TEXT_HOLD_MS = 0;
 const EXTRA_POST_TEXT_HOLD_MS_PER_PARAGRAPH = 0;
-const VIDEO_PLAYBACK_RATE = 0.35;
+const VIDEO_PLAYBACK_RATE = 0.5;
 
 function emphasizeSelfishReason(text: string) {
   const normalized = text.trimStart();

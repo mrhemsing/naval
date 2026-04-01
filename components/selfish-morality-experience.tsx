@@ -741,6 +741,7 @@ function SceneStage({
                 animate={{ opacity: showMobileVideo ? 1 : 0 }}
                 exit={{ opacity: 1 }}
                 transition={{ duration: showMobileVideo ? 0.22 : 0 }}
+                style={{ transform: 'scale(1.2)', transformOrigin: 'center center' }}
               >
                 <SceneVideoSwap
                   slide={slide}
@@ -1087,8 +1088,7 @@ export function SelfishMoralityExperience() {
         </div>
       </header>
 
-      <div className="pointer-events-auto absolute bottom-4 left-5 z-50 inline-flex items-center gap-2 sm:bottom-5 sm:left-8 lg:bottom-6 lg:left-12">
-        <span className="text-[13px] text-black">© {new Date().getFullYear()}</span>
+      <div className="pointer-events-auto absolute bottom-4 left-5 z-50 sm:bottom-5 sm:left-8 lg:bottom-6 lg:left-12">
         <a
           href="https://b-average.com"
           target="_blank"

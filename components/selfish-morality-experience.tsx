@@ -1070,9 +1070,15 @@ export function SelfishMoralityExperience() {
 
       <header className="pointer-events-none absolute inset-x-0 top-0 z-50 flex items-start justify-between px-5 py-4 sm:px-8 sm:py-5 lg:px-12">
         <div>
-          <p className="relative -top-[2px] text-[18px] font-bold tracking-[0.02em] sm:text-[20px]" style={{ color: "#000000" }}>
+          <button
+            type="button"
+            onClick={() => goTo(0)}
+            className="pointer-events-auto relative -top-[2px] text-[18px] font-bold tracking-[0.02em] transition hover:opacity-80 sm:text-[20px]"
+            style={{ color: "#000000" }}
+            aria-label="Go to first slide"
+          >
             Selfish Morality
-          </p>
+          </button>
           <p className="pointer-events-auto mt-[2px] text-[14px] text-[var(--muted)] sm:text-[16px]">
             A{" "}
             <a

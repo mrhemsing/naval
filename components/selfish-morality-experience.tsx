@@ -691,7 +691,7 @@ function SceneStage({
     setShowMobileVideo(false);
     const timer = window.setTimeout(() => {
       if (isVideoReady) setShowMobileVideo(true);
-    }, 1600);
+    }, 900);
     return () => window.clearTimeout(timer);
   }, [isMobile, reduced, slide.id, isVideoReady]);
 
@@ -699,7 +699,7 @@ function SceneStage({
     if (!isMobile || reduced) return;
     if (!isVideoReady) return;
 
-    const timer = window.setTimeout(() => setShowMobileVideo(true), 1600);
+    const timer = window.setTimeout(() => setShowMobileVideo(true), 900);
     return () => window.clearTimeout(timer);
   }, [isMobile, reduced, isVideoReady, slide.id]);
 
@@ -716,7 +716,7 @@ function SceneStage({
     setShowDesktopVideo(false);
     const timer = window.setTimeout(() => {
       if (isVideoReady) setShowDesktopVideo(true);
-    }, 1600);
+    }, 900);
     return () => window.clearTimeout(timer);
   }, [isMobile, reduced, slide.id, isVideoReady]);
 
@@ -724,7 +724,7 @@ function SceneStage({
     if (isMobile || reduced) return;
     if (!isVideoReady) return;
 
-    const timer = window.setTimeout(() => setShowDesktopVideo(true), 1600);
+    const timer = window.setTimeout(() => setShowDesktopVideo(true), 900);
     return () => window.clearTimeout(timer);
   }, [isMobile, reduced, isVideoReady, slide.id]);
 

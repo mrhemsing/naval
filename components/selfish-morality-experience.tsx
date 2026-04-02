@@ -923,6 +923,7 @@ export function SelfishMoralityExperience() {
   const prefersReducedMotion = useReducedMotion();
 
   const slide = slides[index];
+  const nextSlide = slides[(index + 1) % slides.length];
   const canGoPrev = index > 0;
   const canGoNext = index < slides.length - 1;
   const canNavigate = !isTransitioning;
@@ -930,6 +931,26 @@ export function SelfishMoralityExperience() {
     () => `${String(index + 1).padStart(2, "0")} / ${String(slides.length).padStart(2, "0")}`,
     [index],
   );
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+
+    const sources = [nextSlide.video.replace(/\.mp4$/i, ".webm"), nextSlide.video];
+    const links: HTMLLinkElement[] = [];
+
+    for (const href of sources) {
+      const link = document.createElement("link");
+      link.rel = "preload";
+      link.as = "video";
+      link.href = href;
+      document.head.appendChild(link);
+      links.push(link);
+    }
+
+    return () => {
+      for (const link of links) link.remove();
+    };
+  }, [nextSlide]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;

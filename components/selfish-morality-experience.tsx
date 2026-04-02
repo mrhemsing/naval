@@ -773,7 +773,7 @@ function SceneStage({
             ) : null}
           </div>
 
-          <div className="relative z-40 -mt-6 overflow-hidden px-[20px] pb-6 sm:-mt-8 sm:px-5 sm:pb-8">
+          <div className="relative z-40 -mt-6 overflow-hidden px-[14px] pb-6 sm:-mt-8 sm:px-5 sm:pb-8">
             <div className={`relative min-h-[34dvh] rounded-[1.2rem] border border-black/10 bg-white/88 p-4 shadow-[0_10px_22px_rgba(21,14,10,0.06),0_28px_65px_rgba(21,14,10,0.045)] backdrop-blur-[16px] sm:min-h-[32dvh] ${isShortViewport ? "max-h-[48dvh] overflow-y-auto" : "overflow-hidden"}`}>
               <motion.div
                 aria-hidden

@@ -194,6 +194,7 @@ function SceneContent({
   reduced,
   isVideoReady,
   replayNonce,
+  showDesktopVideo,
   onVideoReady,
   onVideoEnded,
 }: {
@@ -212,6 +213,7 @@ function SceneContent({
   reduced: boolean;
   isVideoReady: boolean;
   replayNonce: number;
+  showDesktopVideo: boolean;
   onVideoReady: () => void;
   onVideoEnded: (frameDataUrl?: string) => void;
 }) {
@@ -372,8 +374,8 @@ function SceneContent({
         <motion.div
           className="absolute inset-0 z-30"
           initial={false}
-          animate={{ opacity: 1 }}
-          transition={{ duration: reduced ? 0.18 : 0.4, ease: [0.22, 1, 0.36, 1] }}
+          animate={{ opacity: showDesktopVideo ? 1 : 0 }}
+          transition={{ duration: showDesktopVideo ? 0.22 : 0 }}
         >
           <SceneVideoSwap
             slide={slide}
@@ -383,6 +385,14 @@ function SceneContent({
             autoplay={phase !== "ended"}
           />
         </motion.div>
+
+        {!showDesktopVideo ? (
+          <div className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center bg-[rgba(0,0,0,0.02)]">
+            <span className="text-[11px] font-semibold tracking-[0.35em] text-white sm:text-xs">
+              LOADING...
+            </span>
+          </div>
+        ) : null}
 
         <motion.div
           aria-hidden
@@ -640,6 +650,8 @@ function SceneStage({
   const [phase, setPhase] = useState<ScenePhase>(reduced ? "ended" : "intro");
   const [isVideoReady, setIsVideoReady] = useState(reduced);
   const [replayNonce, setReplayNonce] = useState(0);
+  const [showMobileVideo, setShowMobileVideo] = useState(reduced);
+  const [showDesktopVideo, setShowDesktopVideo] = useState(reduced);
   const textRevealMs = BASE_TEXT_REVEAL_MS + Math.max(0, slide.quote.length - 1) * EXTRA_TEXT_REVEAL_MS_PER_PARAGRAPH;
   const postTextHoldMs = BASE_POST_TEXT_HOLD_MS + Math.max(0, slide.quote.length - 1) * EXTRA_POST_TEXT_HOLD_MS_PER_PARAGRAPH;
 
@@ -666,6 +678,56 @@ function SceneStage({
     return () => window.clearTimeout(playTimer);
   }, [phase, postTextHoldMs, reduced, slide.id]);
 
+  useEffect(() => {
+    if (!isMobile) {
+      setShowMobileVideo(true);
+      return;
+    }
+    if (reduced) {
+      setShowMobileVideo(true);
+      return;
+    }
+
+    setShowMobileVideo(false);
+    const timer = window.setTimeout(() => {
+      if (isVideoReady) setShowMobileVideo(true);
+    }, 900);
+    return () => window.clearTimeout(timer);
+  }, [isMobile, reduced, slide.id, isVideoReady]);
+
+  useEffect(() => {
+    if (!isMobile || reduced) return;
+    if (!isVideoReady) return;
+
+    const timer = window.setTimeout(() => setShowMobileVideo(true), 900);
+    return () => window.clearTimeout(timer);
+  }, [isMobile, reduced, isVideoReady, slide.id]);
+
+  useEffect(() => {
+    if (isMobile) {
+      setShowDesktopVideo(true);
+      return;
+    }
+    if (reduced) {
+      setShowDesktopVideo(true);
+      return;
+    }
+
+    setShowDesktopVideo(false);
+    const timer = window.setTimeout(() => {
+      if (isVideoReady) setShowDesktopVideo(true);
+    }, 900);
+    return () => window.clearTimeout(timer);
+  }, [isMobile, reduced, slide.id, isVideoReady]);
+
+  useEffect(() => {
+    if (isMobile || reduced) return;
+    if (!isVideoReady) return;
+
+    const timer = window.setTimeout(() => setShowDesktopVideo(true), 900);
+    return () => window.clearTimeout(timer);
+  }, [isMobile, reduced, isVideoReady, slide.id]);
+
   if (isMobile) {
     return (
       <article className="grid h-[100dvh] w-full grid-cols-1 overflow-hidden px-0 pb-0 pt-16 sm:pt-20">
@@ -676,9 +738,9 @@ function SceneStage({
                 key={`mobile-video-${slide.id}`}
                 className="absolute inset-0 z-30"
                 initial={false}
-                animate={{ opacity: 1 }}
+                animate={{ opacity: showMobileVideo ? 1 : 0 }}
                 exit={{ opacity: 1 }}
-                transition={{ duration: 0 }}
+                transition={{ duration: showMobileVideo ? 0.22 : 0 }}
                 style={{ transform: 'scale(1.2)', transformOrigin: 'center center' }}
               >
                 <SceneVideoSwap
@@ -702,6 +764,13 @@ function SceneStage({
               }}
             />
 
+            {!showMobileVideo ? (
+              <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-[rgba(0,0,0,0.02)]">
+                <span className="text-[11px] font-semibold tracking-[0.35em] text-white sm:text-xs">
+                  LOADING...
+                </span>
+              </div>
+            ) : null}
           </div>
 
           <div className="relative z-40 -mt-6 overflow-hidden px-[20px] pb-6 sm:-mt-8 sm:px-5 sm:pb-8">
@@ -833,6 +902,7 @@ function SceneStage({
         reduced={reduced}
         isVideoReady={isVideoReady}
         replayNonce={replayNonce}
+        showDesktopVideo={showDesktopVideo}
         onVideoReady={() => setIsVideoReady(true)}
         onVideoEnded={() => setPhase("ended")}
       />

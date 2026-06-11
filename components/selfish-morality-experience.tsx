@@ -388,17 +388,17 @@ function SceneContent({
         initial={
           reduced
             ? false
-            : { opacity: 0, x: direction * -58, y: 34, scale: 0.975, rotate: direction * -0.45 }
+            : { opacity: 0, y: 20, scale: 0.985 }
         }
         animate={
           reduced
             ? { opacity: 1 }
-            : { opacity: 1, x: 0, y: 0, scale: 1, rotate: 0 }
+            : { opacity: 1, y: 0, scale: 1 }
         }
         exit={
           reduced
             ? { opacity: 0 }
-            : { opacity: 0, x: direction * 48, y: 12, scale: 1.01, rotate: direction * 0.25 }
+            : { opacity: 0, y: 8, scale: 0.995 }
         }
         transition={{ duration: reduced ? 0.18 : 0.8, ease: [0.22, 1, 0.36, 1], delay: reduced ? 0 : 0.06 }}
       >
@@ -409,7 +409,7 @@ function SceneContent({
             reduced
               ? { x: 0, y: 0, scale: 1, opacity: 1 }
               : stableVisualPhase === "intro"
-                ? { x: 10, y: 10, scale: 0.985, opacity: 0.94 }
+                ? { x: 0, y: 10, scale: 0.985, opacity: 0.94 }
                 : { x: 0, y: 0, scale: 1, opacity: 1 }
           }
           transition={{ duration: reduced ? 0.18 : 0.82, ease: [0.22, 1, 0.36, 1] }}
@@ -785,7 +785,7 @@ function SceneStage({
           ? { opacity: 0 }
           : isMobile
             ? { opacity: 1, x: 0, scale: 1 }
-            : { opacity: 0, x: direction * 60, scale: 0.985 }
+            : { opacity: 0, x: 0, scale: 1 }
       }
       animate={reduced ? { opacity: 1 } : { opacity: 1, x: 0, scale: 1 }}
       exit={
@@ -793,7 +793,7 @@ function SceneStage({
           ? { opacity: 0 }
           : isMobile
             ? { opacity: 1, x: 0, scale: 1 }
-            : { opacity: 0, x: direction * -42, scale: 1.01 }
+            : { opacity: 0, x: 0, scale: 1 }
       }
       transition={{ duration: reduced ? 0.18 : 0.82, ease: [0.22, 1, 0.36, 1] }}
       className="grid h-[100dvh] w-full grid-cols-1 overflow-hidden px-0 pb-0 pt-16 sm:pt-20 lg:grid-cols-[minmax(340px,0.72fr)_minmax(0,1.28fr)] lg:gap-0 lg:px-0 lg:py-0 lg:pl-[3rem] lg:pr-0 xl:pl-[3rem] xl:pr-0"

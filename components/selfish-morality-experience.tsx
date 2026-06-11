@@ -1,9 +1,10 @@
 "use client";
 
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { slides, type Slide } from "@/lib/slides";
+import { getCachedVideo, preloadVideo } from "@/lib/video-preloader";
 
 const swipeThreshold = 50;
 const BASE_TEXT_REVEAL_MS = 1500;
@@ -47,16 +48,16 @@ type SceneVideoProps = {
   slide: Slide;
   resetNonce: number;
   onReady: () => void;
-  onEnded: (frameDataUrl?: string) => void;
   autoplay: boolean;
 };
 
-function SceneVideo({ slide, resetNonce, onReady, onEnded, autoplay }: SceneVideoProps) {
+function SceneVideo({ slide, resetNonce, onReady, autoplay }: SceneVideoProps) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const playTimerRef = useRef<number | null>(null);
   const hasEndedRef = useRef(false);
   const hasStartedRef = useRef(false);
   const hasMountedRef = useRef(false);
+  const cachedSrc = getCachedVideo(slide.video);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -82,8 +83,6 @@ function SceneVideo({ slide, resetNonce, onReady, onEnded, autoplay }: SceneVide
     if (video.readyState >= 1) {
       onReady();
     }
-
-    video.load();
 
     const tryPlay = () => {
       if (hasStartedRef.current) return;
@@ -114,6 +113,7 @@ function SceneVideo({ slide, resetNonce, onReady, onEnded, autoplay }: SceneVide
     <div className="absolute inset-0 z-30">
       <video
         ref={videoRef}
+        src={cachedSrc}
         className="h-full w-full object-cover"
         muted
         playsInline
@@ -122,59 +122,9 @@ function SceneVideo({ slide, resetNonce, onReady, onEnded, autoplay }: SceneVide
         onCanPlay={onReady}
         onEnded={() => undefined}
       >
-        <source src={slide.video.replace(/\.mp4$/i, ".webm")} type="video/webm" />
-        <source src={slide.video} type="video/mp4" />
+        {!cachedSrc ? <source src={slide.video} type="video/mp4" /> : null}
       </video>
     </div>
-  );
-}
-
-function SceneVideoSwap({
-  slide,
-  resetNonce,
-  onReady,
-  onEnded,
-  autoplay,
-}: SceneVideoProps) {
-  const [displayedSlide, setDisplayedSlide] = useState(slide);
-  const [pendingSlide, setPendingSlide] = useState<Slide | null>(null);
-  const [pendingReady, setPendingReady] = useState(false);
-
-  useEffect(() => {
-    if (slide.id === displayedSlide.id) return;
-    setPendingSlide(slide);
-    setPendingReady(false);
-  }, [displayedSlide.id, slide]);
-
-  useEffect(() => {
-    if (!pendingSlide || !pendingReady) return;
-    setDisplayedSlide(pendingSlide);
-    setPendingSlide(null);
-    setPendingReady(false);
-  }, [pendingReady, pendingSlide]);
-
-  return (
-    <>
-      <SceneVideo
-        slide={displayedSlide}
-        resetNonce={resetNonce}
-        onReady={onReady}
-        onEnded={onEnded}
-        autoplay={autoplay}
-      />
-
-      {pendingSlide ? (
-        <div className="pointer-events-none absolute inset-0 opacity-0">
-          <SceneVideo
-            slide={pendingSlide}
-            resetNonce={resetNonce}
-            onReady={() => setPendingReady(true)}
-            onEnded={onEnded}
-            autoplay={autoplay}
-          />
-        </div>
-      ) : null}
-    </>
   );
 }
 
@@ -192,11 +142,9 @@ function SceneContent({
   canNavigate,
   phase,
   reduced,
-  isVideoReady,
   replayNonce,
   showDesktopVideo,
   onVideoReady,
-  onVideoEnded,
 }: {
   slide: Slide;
   index: number;
@@ -211,11 +159,9 @@ function SceneContent({
   canNavigate: boolean;
   phase: ScenePhase;
   reduced: boolean;
-  isVideoReady: boolean;
   replayNonce: number;
   showDesktopVideo: boolean;
   onVideoReady: () => void;
-  onVideoEnded: (frameDataUrl?: string) => void;
 }) {
   const textVisible = phase !== "intro";
   const stableVisualPhase = phase === "intro" ? "intro" : "hold";
@@ -237,11 +183,10 @@ function SceneContent({
             animate={{ opacity: 1 }}
             transition={{ duration: reduced ? 0.18 : 0.2, ease: [0.22, 1, 0.36, 1] }}
           >
-            <SceneVideoSwap
+            <SceneVideo
               slide={slide}
               resetNonce={replayNonce}
               onReady={onVideoReady}
-              onEnded={onVideoEnded}
               autoplay={phase !== "ended"}
             />
           </motion.div>
@@ -377,11 +322,10 @@ function SceneContent({
           animate={{ opacity: showDesktopVideo ? 1 : 0 }}
           transition={{ duration: showDesktopVideo ? 0.22 : 0 }}
         >
-          <SceneVideoSwap
+          <SceneVideo
             slide={slide}
             resetNonce={replayNonce}
             onReady={onVideoReady}
-            onEnded={onVideoEnded}
             autoplay={phase !== "ended"}
           />
         </motion.div>
@@ -628,7 +572,6 @@ function SceneStage({
   canGoPrev,
   canNavigate,
   reduced,
-  onPhaseChange,
   isMobile,
   isShortViewport,
 }: {
@@ -643,7 +586,6 @@ function SceneStage({
   canGoPrev: boolean;
   canNavigate: boolean;
   reduced: boolean;
-  onPhaseChange?: (phase: ScenePhase) => void;
   isMobile: boolean;
   isShortViewport: boolean;
 }) {
@@ -654,10 +596,6 @@ function SceneStage({
   const [showDesktopVideo, setShowDesktopVideo] = useState(reduced);
   const textRevealMs = BASE_TEXT_REVEAL_MS + Math.max(0, slide.quote.length - 1) * EXTRA_TEXT_REVEAL_MS_PER_PARAGRAPH;
   const postTextHoldMs = BASE_POST_TEXT_HOLD_MS + Math.max(0, slide.quote.length - 1) * EXTRA_POST_TEXT_HOLD_MS_PER_PARAGRAPH;
-
-  useEffect(() => {
-    onPhaseChange?.(reduced ? "ended" : phase);
-  }, [onPhaseChange, phase, reduced]);
 
   useEffect(() => {
     if (reduced) return;
@@ -679,46 +617,12 @@ function SceneStage({
   }, [phase, postTextHoldMs, reduced, slide.id]);
 
   useEffect(() => {
-    if (!isMobile) {
-      setShowMobileVideo(true);
-      return;
-    }
-    if (reduced) {
-      setShowMobileVideo(true);
-      return;
-    }
-
-    setShowMobileVideo(false);
-    const timer = window.setTimeout(() => {
-      if (isVideoReady) setShowMobileVideo(true);
-    }, 900);
-    return () => window.clearTimeout(timer);
-  }, [isMobile, reduced, slide.id, isVideoReady]);
-
-  useEffect(() => {
     if (!isMobile || reduced) return;
     if (!isVideoReady) return;
 
     const timer = window.setTimeout(() => setShowMobileVideo(true), 900);
     return () => window.clearTimeout(timer);
   }, [isMobile, reduced, isVideoReady, slide.id]);
-
-  useEffect(() => {
-    if (isMobile) {
-      setShowDesktopVideo(true);
-      return;
-    }
-    if (reduced) {
-      setShowDesktopVideo(true);
-      return;
-    }
-
-    setShowDesktopVideo(false);
-    const timer = window.setTimeout(() => {
-      if (isVideoReady) setShowDesktopVideo(true);
-    }, 900);
-    return () => window.clearTimeout(timer);
-  }, [isMobile, reduced, slide.id, isVideoReady]);
 
   useEffect(() => {
     if (isMobile || reduced) return;
@@ -743,11 +647,10 @@ function SceneStage({
                 transition={{ duration: showMobileVideo ? 0.22 : 0 }}
                 style={{ transform: 'scale(1.2)', transformOrigin: 'center center' }}
               >
-                <SceneVideoSwap
+                <SceneVideo
                   slide={slide}
                   resetNonce={replayNonce}
                   onReady={() => setIsVideoReady(true)}
-                  onEnded={() => setPhase("ended")}
                   autoplay={phase !== "ended"}
                 />
               </motion.div>
@@ -900,24 +803,28 @@ function SceneStage({
         canNavigate={canNavigate}
         phase={reduced ? "ended" : phase}
         reduced={reduced}
-        isVideoReady={isVideoReady}
         replayNonce={replayNonce}
         showDesktopVideo={showDesktopVideo}
         onVideoReady={() => setIsVideoReady(true)}
-        onVideoEnded={() => setPhase("ended")}
       />
     </motion.article>
   );
 }
 
 export function SelfishMoralityExperience() {
-  const [index, setIndex] = useState(0);
+  const [index, setIndex] = useState(() => {
+    if (typeof window === "undefined") return 0;
+
+    const params = new URLSearchParams(window.location.search);
+    const slug = params.get("slide");
+    const foundIndex = slug ? slides.findIndex((candidate) => candidate.slug === slug) : -1;
+    return foundIndex >= 0 ? foundIndex : 0;
+  });
   const [direction, setDirection] = useState(1);
   const touchStartRef = useRef<number | null>(null);
   const touchMovedRef = useRef(false);
   const touchLastDeltaRef = useRef(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const [activePhase, setActivePhase] = useState<ScenePhase>("intro");
   const [isMobile, setIsMobile] = useState(false);
   const [isShortViewport, setIsShortViewport] = useState(false);
   const prefersReducedMotion = useReducedMotion();
@@ -926,10 +833,16 @@ export function SelfishMoralityExperience() {
   const canGoPrev = index > 0;
   const canGoNext = index < slides.length - 1;
   const canNavigate = !isTransitioning;
-  const progress = useMemo(
-    () => `${String(index + 1).padStart(2, "0")} / ${String(slides.length).padStart(2, "0")}`,
-    [index],
-  );
+
+  useEffect(() => {
+    const targets = [index, index + 1, index - 1, index + 2].filter(
+      (candidate) => candidate >= 0 && candidate < slides.length,
+    );
+
+    targets.forEach((targetIndex) => {
+      void preloadVideo(slides[targetIndex].video).catch(() => {});
+    });
+  }, [index]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -945,13 +858,6 @@ export function SelfishMoralityExperience() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-
-    const params = new URLSearchParams(window.location.search);
-    const slug = params.get("slide");
-    const foundIndex = slug ? slides.findIndex((candidate) => candidate.slug === slug) : -1;
-    if (foundIndex >= 0) {
-      setIndex(foundIndex);
-    }
 
     const handlePopState = () => {
       const nextParams = new URLSearchParams(window.location.search);
@@ -1160,7 +1066,7 @@ export function SelfishMoralityExperience() {
           touchLastDeltaRef.current = 0;
         }}
       >
-        <AnimatePresence initial={false} custom={direction} mode="wait">
+        <AnimatePresence initial={false} custom={direction} mode="popLayout">
           <SceneStage
             key={slide.id}
             slide={slide}
@@ -1174,7 +1080,6 @@ export function SelfishMoralityExperience() {
             canGoPrev={canGoPrev}
             canNavigate={canNavigate}
             reduced={Boolean(prefersReducedMotion)}
-            onPhaseChange={setActivePhase}
             isMobile={isMobile}
             isShortViewport={isShortViewport}
           />

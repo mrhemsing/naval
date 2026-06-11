@@ -57,7 +57,7 @@ function SceneVideo({ slide, resetNonce, onReady, autoplay }: SceneVideoProps) {
   const hasEndedRef = useRef(false);
   const hasStartedRef = useRef(false);
   const hasMountedRef = useRef(false);
-  const cachedSrc = getCachedVideo(slide.video);
+  const videoSrc = getCachedVideo(slide.video) ?? slide.video;
 
   useEffect(() => {
     const video = videoRef.current;
@@ -112,18 +112,19 @@ function SceneVideo({ slide, resetNonce, onReady, autoplay }: SceneVideoProps) {
   return (
     <div className="absolute inset-0 z-30">
       <video
+        key={videoSrc}
         ref={videoRef}
-        src={cachedSrc}
+        src={videoSrc}
         className="h-full w-full object-cover"
         muted
         playsInline
         preload="auto"
         aria-label={slide.alt}
+        onLoadedMetadata={onReady}
+        onLoadedData={onReady}
         onCanPlay={onReady}
         onEnded={() => undefined}
-      >
-        {!cachedSrc ? <source src={slide.video} type="video/mp4" /> : null}
-      </video>
+      />
     </div>
   );
 }
@@ -590,12 +591,13 @@ function SceneStage({
   isShortViewport: boolean;
 }) {
   const [phase, setPhase] = useState<ScenePhase>(reduced ? "ended" : "intro");
-  const [isVideoReady, setIsVideoReady] = useState(reduced);
+  const [isVideoReady, setIsVideoReady] = useState(() => reduced || Boolean(getCachedVideo(slide.video)));
   const [replayNonce, setReplayNonce] = useState(0);
   const [showMobileVideo, setShowMobileVideo] = useState(reduced);
   const [showDesktopVideo, setShowDesktopVideo] = useState(reduced);
   const textRevealMs = BASE_TEXT_REVEAL_MS + Math.max(0, slide.quote.length - 1) * EXTRA_TEXT_REVEAL_MS_PER_PARAGRAPH;
   const postTextHoldMs = BASE_POST_TEXT_HOLD_MS + Math.max(0, slide.quote.length - 1) * EXTRA_POST_TEXT_HOLD_MS_PER_PARAGRAPH;
+  const markVideoReady = useCallback(() => setIsVideoReady(true), []);
 
   useEffect(() => {
     if (reduced) return;
@@ -615,6 +617,18 @@ function SceneStage({
     const playTimer = window.setTimeout(() => setPhase("play"), postTextHoldMs);
     return () => window.clearTimeout(playTimer);
   }, [phase, postTextHoldMs, reduced, slide.id]);
+
+  useEffect(() => {
+    if (reduced || isVideoReady) return;
+
+    const fallbackTimer = window.setTimeout(() => {
+      setIsVideoReady(true);
+      setShowMobileVideo(true);
+      setShowDesktopVideo(true);
+    }, 1800);
+
+    return () => window.clearTimeout(fallbackTimer);
+  }, [isVideoReady, reduced, slide.id]);
 
   useEffect(() => {
     if (!isMobile || reduced) return;
@@ -650,7 +664,7 @@ function SceneStage({
                 <SceneVideo
                   slide={slide}
                   resetNonce={replayNonce}
-                  onReady={() => setIsVideoReady(true)}
+                  onReady={markVideoReady}
                   autoplay={phase !== "ended"}
                 />
               </motion.div>
@@ -805,7 +819,7 @@ function SceneStage({
         reduced={reduced}
         replayNonce={replayNonce}
         showDesktopVideo={showDesktopVideo}
-        onVideoReady={() => setIsVideoReady(true)}
+        onVideoReady={markVideoReady}
       />
     </motion.article>
   );

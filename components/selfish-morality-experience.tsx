@@ -279,7 +279,7 @@ function SceneContent({
       </div>
 
       <motion.div
-        className="relative hidden min-h-[34vh] overflow-hidden rounded-[1.35rem] border border-black/8 bg-[#dfd4c2] shadow-[0_35px_120px_rgba(56,35,22,0.18)] sm:min-h-[44vh] lg:order-2 lg:flex lg:h-[100dvh] lg:min-h-0 lg:max-h-[100dvh] lg:rounded-none lg:border-x lg:border-y-0"
+        className="relative hidden min-h-[34vh] overflow-hidden rounded-[1.35rem] border border-black/8 bg-[#dfd4c2] shadow-[0_35px_120px_rgba(56,35,22,0.18)] sm:min-h-[44vh] lg:absolute lg:inset-y-0 lg:right-0 lg:block lg:h-[100dvh] lg:w-[62vw] lg:min-w-[720px] lg:rounded-none lg:border-x lg:border-y-0"
         initial={reduced ? false : { opacity: 0, x: direction * 42, y: 18, scale: 1.02, rotate: direction * 0.45 }}
         animate={reduced ? { opacity: 1 } : { opacity: 1, x: 0, y: 0, scale: 1, rotate: 0 }}
         exit={
@@ -384,7 +384,7 @@ function SceneContent({
       </motion.div>
 
       <motion.div
-        className="relative z-40 hidden px-2 pb-2 lg:order-1 lg:-mr-20 lg:-mt-0 lg:flex lg:items-center lg:px-0 xl:-mr-24"
+        className="relative z-40 hidden px-2 pb-2 lg:absolute lg:inset-y-0 lg:left-12 lg:flex lg:w-[41rem] lg:items-center lg:px-0 xl:w-[43rem]"
         initial={
           reduced
             ? false
@@ -796,7 +796,7 @@ function SceneStage({
             : { opacity: 0, x: 0, scale: 1 }
       }
       transition={{ duration: reduced ? 0.18 : 0.82, ease: [0.22, 1, 0.36, 1] }}
-      className="grid h-[100dvh] w-full grid-cols-1 overflow-hidden px-0 pb-0 pt-16 sm:pt-20 lg:grid-cols-[minmax(340px,0.72fr)_minmax(0,1.28fr)] lg:gap-0 lg:px-0 lg:py-0 lg:pl-[3rem] lg:pr-0 xl:pl-[3rem] xl:pr-0"
+      className="relative h-[100dvh] w-full overflow-hidden px-0 pb-0 pt-16 sm:pt-20 lg:absolute lg:inset-0 lg:px-0 lg:py-0"
     >
       <SceneContent
         slide={slide}

@@ -107,7 +107,7 @@ function SceneVideo({ slide, resetNonce, onReady, autoplay }: SceneVideoProps) {
         playTimerRef.current = null;
       }
     };
-  }, [onReady, resetNonce, slide.id, autoplay]);
+  }, [onReady, resetNonce, slide.id, autoplay, videoSrc]);
 
   return (
     <div className="absolute inset-0 z-30">
